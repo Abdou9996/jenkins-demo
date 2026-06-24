@@ -1,0 +1,82 @@
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    ports:
+      - "5432:5432"
+
+  mongodb:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+
+  airflow-init:
+    image: apache/airflow:2.6.3
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__WEBSERVER__SECRET_KEY: my_secret_key_123
+    depends_on:
+      - postgres
+      - mongodb
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./data:/data
+      - ./scripts:/scripts
+    command: >
+      bash -c "pip install pandas pymongo pytest &&
+               airflow db init &&
+               airflow users create --role Admin --username admin --password admin --email admin@example.com --firstname Admin --lastname User"
+
+  airflow-webserver:
+    image: apache/airflow:2.6.3
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__WEBSERVER__SECRET_KEY: my_secret_key_123
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - mongodb
+      - airflow-init
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./data:/data
+      - ./scripts:/scripts
+    command: >
+      bash -c "pip install pandas pymongo pytest && airflow webserver"
+
+  airflow-scheduler:
+    image: apache/airflow:2.6.3
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__WEBSERVER__SECRET_KEY: my_secret_key_123
+    depends_on:
+      - postgres
+      - mongodb
+      - airflow-init
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./data:/data
+      - ./scripts:/scripts
+    command: >
+      bash -c "pip install pandas pymongo pytest && airflow scheduler"
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    ports:
+      - "8081:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - ./dags:/opt/airflow/dags
+      - ./data:/data
+      - ./scripts:/scripts
+
+volumes:
+  jenkins_home:
