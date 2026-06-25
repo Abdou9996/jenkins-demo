@@ -8,21 +8,32 @@ pipeline {
             }
         }
 
-        stage('Install') {
+        stage('Create venv and Install') {
             steps {
-                sh 'python3 -m pip install -r requirements.txt'
+                sh '''
+                python3 -m venv venv
+                . venv/bin/activate
+                python -m pip install --upgrade pip
+                pip install -r requirements.txt
+                '''
             }
         }
 
         stage('Test') {
             steps {
-                sh 'python3 -m pytest'
+                sh '''
+                . venv/bin/activate
+                pytest
+                '''
             }
         }
 
         stage('Run App') {
             steps {
-                sh 'python3 app.py'
+                sh '''
+                . venv/bin/activate
+                python app.py
+                '''
             }
         }
     }
