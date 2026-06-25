@@ -2,15 +2,28 @@ pipeline {
     agent any
 
     stages {
+
         stage('Clone') {
             steps {
                 echo 'Repository cloned'
             }
         }
 
-        stage('Run Python') {
+        stage('Install') {
             steps {
-                echo 'Hello Jenkins'
+                sh 'pip install -r requirements.txt'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'pytest'
+            }
+        }
+
+        stage('Run App') {
+            steps {
+                sh 'python3 app.py'
             }
         }
     }
