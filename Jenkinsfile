@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     stages {
-
         stage('Clone') {
             steps {
                 echo 'Repository cloned'
@@ -11,7 +10,7 @@ pipeline {
 
         stage('Run Python') {
             steps {
-                sh 'python3 app.py'
+                echo 'Hello Jenkins'
             }
         }
     }
